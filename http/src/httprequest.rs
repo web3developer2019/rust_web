@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, os::windows::process};
 
 #[derive(Debug,PartialEq)]
 pub enum Method{
@@ -42,11 +42,13 @@ pub enum Resource{
 pub struct  HttpRequest{
     pub method:Method,
     pub version:Version,
-    pub path:Resource,
-    pub head:HashMap<String,String>,
+    pub resource:Resource,
+    pub header:HashMap<String,String>,
     pub msg_body:String,
 }
-
+/**
+ * 处理http请求
+ */
 impl From<String> for HttpRequest {
     fn from(req:String)->Self{
         let mut parsed_method = Method::Uninitialized;
@@ -60,11 +62,34 @@ impl From<String> for HttpRequest {
                 parsed_method = method;
                 parsed_resource = resource;
                 parsed_version=version;
+            }else if line.contains(":") { //处理header行
+                let (key,value) = process_header_line(req);
+                parsed_headers.insert(key,value);
+                
+            }else if line.len()==0 {//处理空行
+                
+            }else {//处理消息体
+                parsed_msg_body = process_msg_body(line);
             }
+        }
+        //将得到的信息组成HttpRequest类型返回
+        HttpRequest{
+            method:parsed_method,
+            version:parsed_version,
+            resource:parsed_resource,
+            header:parsed_headers,
+            msg_body:parsed_msg_body.to_string(),
         }
     }
 }
-
+//实现处理请求头函数
+fn process_header_line(s：&str)->(Method,Resource,Version){
+    let mut words = s.split_whitespace();
+    let  method = words.next().unwrap();
+    let mut resource = words.next().unwrap();
+    let mut version = words.next().unwrap();
+    (method.into(),Resource::Path(resource.to_string()),version.into(),)
+}
 
 #[cfg(test)]
 mod tests{
