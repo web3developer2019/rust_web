@@ -83,7 +83,8 @@ impl From<String> for HttpRequest {
     }
 }
 //实现处理请求头函数
-fn process_header_line(s：&str)->(Method,Resource,Version){
+fn process_req_line(s:&str)->(Method,Resource,Version){
+    //将传入字符串按空白分成多个单词
     let mut words = s.split_whitespace();
     let  method = words.next().unwrap();
     let mut resource = words.next().unwrap();
@@ -91,6 +92,22 @@ fn process_header_line(s：&str)->(Method,Resource,Version){
     (method.into(),Resource::Path(resource.to_string()),version.into(),)
 }
 
+fn process_header_line(s:&str)->(String,String){
+    let mut header_items = s.split(":");
+    let mut key = String::from(""_);
+    let mut value = String::from("");
+    if let Some(k) = header_items.next() {
+        key = k.to_string();
+    }
+    if let Some(v) = header_items.next() {
+        value = v.to_string();
+    }
+    (key,value)
+}
+
+fn process_msg_body(s:&str)->&str{
+
+}
 #[cfg(test)]
 mod tests{
     use super::*;
