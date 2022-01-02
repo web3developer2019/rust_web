@@ -29,6 +29,7 @@ impl <'a> From<HttpResponse<'a>> for String {
         let res1 = res.clone();
         format!(
             "{} {} {}\r\n{}Content-Length:{}\r\n\r\n{}",
+            //调用res1的getter方法
             &res1.version,
             &res1.status_code,
             &res1.status_text(),
@@ -38,6 +39,7 @@ impl <'a> From<HttpResponse<'a>> for String {
         )
     }
 }
+//实现new函数
 impl<'a> HttpResponse<'a> {
     pub fn new(
         status_code: &'a str,
@@ -104,8 +106,8 @@ impl<'a> HttpResponse<'a> {
 mod tests{
     use super::*;
     #[test]
-    fn test_new(){
-        let m:HttpResponse = HttpResponse::new(
+    fn test_response_struct_creation_200(){
+        let response_actual:HttpResponse = HttpResponse::new(
             "200",
             None,
         Some("xxx".into()));
@@ -121,6 +123,49 @@ mod tests{
             },
             body:Some("xxx".into()),
         };
-        assert_eq!(response_expected,m);
+        assert_eq!(response_expected,response_actual);
+    }
+
+    #[test]
+    fn test_response_struct_creation_404(){
+        let response_actual:HttpResponse = HttpResponse::new(
+            //字符串字面值存储在二进制文件中，也是字符串切片类型
+            "404",
+            None,
+        Some("xxx".into()));
+
+        let response_expected = HttpResponse{
+            version:"HTTP/1.1",
+            status_code:"404",
+            status_text:"Not Found",
+            headers:{
+                let mut h = HashMap::new();
+                h.insert("Content-Type", "text/html");
+                Some(h)
+            },
+            body:Some("xxx".into()),
+        };
+        assert_eq!(response_expected,response_actual);
+    }
+    //测试响应是否能转换为字符串
+    #[test]
+    fn test_http_response_creation(){
+        let response_actual:HttpResponse = HttpResponse{
+            version:"HTTP/1.1",
+            status_code: "404",
+            status_text:"Not Found",
+            headers:{
+                let mut h = HashMap::new();
+                h.insert("Content-Type", "text/html");
+                Some(h)
+            },
+            body:Some("xxxx".into()),
+        };
+        let http_string :String = response_actual.into();  
+        
+
+        let response_expected = String::from("HTTP/1.1 404 Not Found\r\nContent-Type:text/html\r\nContent-Length:4\r\n\r\nxxxx");
+        assert_eq!(response_expected,http_string
+        );
     }
 }
